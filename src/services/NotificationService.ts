@@ -77,9 +77,12 @@ export class NotificationService {
         html: emailContent
       };
 
-      await this.transporter.sendMail(mailOptions);
-      logger.info(`Alert sent for ${alert.opportunity.symbol} ${alert.level}`);
-      return true;
+      if (this.transporter) {
+        await this.transporter.sendMail(mailOptions);
+        logger.info(`Alert sent for ${alert.opportunity.symbol} ${alert.level}`);
+        return true;
+      }
+      return false;
     } catch (error) {
       logger.error('Failed to send alert:', error);
       return false;
