@@ -1,0 +1,61 @@
+{
+  "id": "8d9e6b51-df1a-419d-9bdd-e766e1c300f5",
+  "timestamp": "2025-12-14T00:51:17.751Z",
+  "symbol": "BTCUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "BTCUSDT",
+    "timestamp": 1765673475455,
+    "price": 90317.2,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765673477698",
+      "symbol": "BTCUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 90317.2,
+      "entryPrice": 90317.2,
+      "stopLoss": 90187.143232,
+      "takeProfit1": 90707.37030399998,
+      "takeProfit2": 90967.48383999997,
+      "takeProfit": 90707.37030399998,
+      "netRR": 2.24,
+      "riskRewardRatio": 2.24,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765673475455
+    }
+  ],
+  "expiresAt": 1765759877751
+}

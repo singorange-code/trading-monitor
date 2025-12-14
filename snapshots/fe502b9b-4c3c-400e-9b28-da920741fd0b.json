@@ -1,0 +1,61 @@
+{
+  "id": "fe502b9b-4c3c-400e-9b28-da920741fd0b",
+  "timestamp": "2025-12-14T00:54:29.931Z",
+  "symbol": "LTCUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "LTCUSDT",
+    "timestamp": 1765673637467,
+    "price": 81.47,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765673637500",
+      "symbol": "LTCUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 81.47,
+      "entryPrice": 81.47,
+      "stopLoss": 81.3526832,
+      "takeProfit1": 81.82195039999999,
+      "takeProfit2": 82.05658399999999,
+      "takeProfit": 81.82195039999999,
+      "netRR": 2.24,
+      "riskRewardRatio": 2.24,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765673637467
+    }
+  ],
+  "expiresAt": 1765760069931
+}

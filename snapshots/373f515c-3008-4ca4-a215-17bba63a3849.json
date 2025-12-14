@@ -1,0 +1,61 @@
+{
+  "id": "373f515c-3008-4ca4-a215-17bba63a3849",
+  "timestamp": "2025-12-14T00:53:20.855Z",
+  "symbol": "AVAXUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "AVAXUSDT",
+    "timestamp": 1765673576298,
+    "price": 13.344,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765673577244",
+      "symbol": "AVAXUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 13.344,
+      "entryPrice": 13.344,
+      "stopLoss": 13.324784639999999,
+      "takeProfit1": 13.40164608,
+      "takeProfit2": 13.440076800000002,
+      "takeProfit": 13.40164608,
+      "netRR": 2.24,
+      "riskRewardRatio": 2.24,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765673576298
+    }
+  ],
+  "expiresAt": 1765760000855
+}

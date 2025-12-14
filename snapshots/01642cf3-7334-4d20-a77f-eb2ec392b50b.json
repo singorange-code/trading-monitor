@@ -1,0 +1,61 @@
+{
+  "id": "01642cf3-7334-4d20-a77f-eb2ec392b50b",
+  "timestamp": "2025-12-14T00:54:17.001Z",
+  "symbol": "XRPUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "XRPUSDT",
+    "timestamp": 1765673636438,
+    "price": 2.0245,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765673637487",
+      "symbol": "XRPUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 2.0245,
+      "entryPrice": 2.0245,
+      "stopLoss": 2.0215847200000003,
+      "takeProfit1": 2.0332458399999997,
+      "takeProfit2": 2.0390763999999995,
+      "takeProfit": 2.0332458399999997,
+      "netRR": 2.24,
+      "riskRewardRatio": 2.24,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765673636438
+    }
+  ],
+  "expiresAt": 1765760057001
+}

@@ -1,0 +1,61 @@
+{
+  "id": "c096a106-2093-4cf2-b16d-31297b5fd2f8",
+  "timestamp": "2025-12-14T00:54:39.647Z",
+  "symbol": "FILUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "FILUSDT",
+    "timestamp": 1765673637466,
+    "price": 1.348,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765673637508",
+      "symbol": "FILUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 1.348,
+      "entryPrice": 1.348,
+      "stopLoss": 1.34539,
+      "takeProfit1": 1.35583,
+      "takeProfit2": 1.36105,
+      "takeProfit": 1.35583,
+      "netRR": 2.43,
+      "riskRewardRatio": 2.43,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765673637466
+    }
+  ],
+  "expiresAt": 1765760079647
+}

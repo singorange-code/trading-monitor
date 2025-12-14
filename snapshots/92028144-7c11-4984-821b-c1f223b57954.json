@@ -1,0 +1,61 @@
+{
+  "id": "92028144-7c11-4984-821b-c1f223b57954",
+  "timestamp": "2025-12-14T00:53:27.326Z",
+  "symbol": "LINKUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "LINKUSDT",
+    "timestamp": 1765673577101,
+    "price": 13.726,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765673577253",
+      "symbol": "LINKUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 13.726,
+      "entryPrice": 13.726,
+      "stopLoss": 13.704220000000001,
+      "takeProfit1": 13.79134,
+      "takeProfit2": 13.8349,
+      "takeProfit": 13.79134,
+      "netRR": 2.31,
+      "riskRewardRatio": 2.31,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765673577101
+    }
+  ],
+  "expiresAt": 1765760007326
+}

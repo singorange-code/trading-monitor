@@ -1,0 +1,61 @@
+{
+  "id": "547ff9ac-6adb-402c-9853-56a1bf65510c",
+  "timestamp": "2025-12-14T00:58:36.037Z",
+  "symbol": "DOTUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "DOTUSDT",
+    "timestamp": 1765673888820,
+    "price": 2.031,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765673890007",
+      "symbol": "DOTUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 2.031,
+      "entryPrice": 2.031,
+      "stopLoss": 2.0272200000000002,
+      "takeProfit1": 2.04234,
+      "takeProfit2": 2.0498999999999996,
+      "takeProfit": 2.04234,
+      "netRR": 2.41,
+      "riskRewardRatio": 2.41,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765673888820
+    }
+  ],
+  "expiresAt": 1765760316037
+}

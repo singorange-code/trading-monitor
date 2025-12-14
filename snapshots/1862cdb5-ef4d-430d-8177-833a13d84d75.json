@@ -1,0 +1,61 @@
+{
+  "id": "1862cdb5-ef4d-430d-8177-833a13d84d75",
+  "timestamp": "2025-12-14T00:58:16.568Z",
+  "symbol": "BNBUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "BNBUSDT",
+    "timestamp": 1765673887893,
+    "price": 897.04,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_SHORT_1765673889989",
+      "symbol": "BNBUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 897.04,
+      "entryPrice": 897.04,
+      "stopLoss": 898.3317376,
+      "takeProfit1": 893.1647871999999,
+      "takeProfit2": 890.5813119999998,
+      "takeProfit": 893.1647871999999,
+      "netRR": 2.24,
+      "riskRewardRatio": 2.24,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow SHORT, trend=DOWN",
+      "timestamp": 1765673887893
+    }
+  ],
+  "expiresAt": 1765760296568
+}

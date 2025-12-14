@@ -1,0 +1,61 @@
+{
+  "id": "dafe458a-0d2b-4a4e-aa16-3641699ba319",
+  "timestamp": "2025-12-14T00:38:36.156Z",
+  "symbol": "ETHUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "ETHUSDT",
+    "timestamp": 1765672715025,
+    "price": 3116.43,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_LONG_1765672715030",
+      "symbol": "ETHUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "LONG",
+      "alertLevel": "WATCH",
+      "entry": 3116.43,
+      "entryPrice": 3116.43,
+      "stopLoss": 3111.9423408,
+      "takeProfit1": 3129.8929776,
+      "takeProfit2": 3138.868296,
+      "takeProfit": 3129.8929776,
+      "netRR": 2.24,
+      "riskRewardRatio": 2.24,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow LONG, trend=UP",
+      "timestamp": 1765672715025
+    }
+  ],
+  "expiresAt": 1765759116156
+}

@@ -1,0 +1,81 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const NotificationService_1 = require("../services/NotificationService");
+const logger_1 = require("../utils/logger");
+const router = (0, express_1.Router)();
+const notificationService = new NotificationService_1.NotificationService();
+// 发送测试邮件
+router.post('/test', async (_req, res) => {
+    try {
+        logger_1.logger.info('Sending test email...');
+        const success = await notificationService.sendTestEmail();
+        if (success) {
+            res.json({
+                success: true,
+                message: 'Test email sent successfully'
+            });
+        }
+        else {
+            res.status(500).json({
+                success: false,
+                message: 'Failed to send test email'
+            });
+        }
+    }
+    catch (error) {
+        logger_1.logger.error('Test email endpoint failed:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+// 检查邮件服务状态
+router.get('/status', async (_req, res) => {
+    try {
+        const isConnected = await notificationService.testConnection();
+        const queueStatus = notificationService.getQueueStatus();
+        res.json({
+            connected: isConnected,
+            queue: queueStatus,
+            timestamp: new Date().toISOString()
+        });
+    }
+    catch (error) {
+        logger_1.logger.error('Notification status check failed:', error);
+        res.status(500).json({
+            connected: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+// 创建测试账户
+router.post('/create-test-account', async (_req, res) => {
+    try {
+        const testAccount = await notificationService.createTestAccount();
+        if (testAccount) {
+            res.json({
+                success: true,
+                account: testAccount,
+                instructions: 'Use these credentials in your .env file for testing'
+            });
+        }
+        else {
+            res.status(500).json({
+                success: false,
+                message: 'Failed to create test account'
+            });
+        }
+    }
+    catch (error) {
+        logger_1.logger.error('Create test account failed:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+exports.default = router;
+//# sourceMappingURL=notifications.js.map
