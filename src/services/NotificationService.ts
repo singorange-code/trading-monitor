@@ -1,15 +1,25 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { logger } from '../utils/logger';
 import { ClassifiedAlert } from '../types';
 import config from '../config';
 
 export class NotificationService {
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
+  private resend: Resend | null = null;
+  private useResend: boolean = false;
   private notificationQueue: ClassifiedAlert[] = [];
   private isProcessing: boolean = false;
 
   constructor() {
-    this.transporter = this.initializeTransporter();
+    // 优先使用 Resend
+    if (process.env.RESEND_API_KEY) {
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+      this.useResend = true;
+      logger.info('Using Resend for email service');
+    } else {
+      this.transporter = this.initializeTransporter();
+    }
   }
 
   private initializeTransporter(): nodemailer.Transporter {
@@ -180,13 +190,19 @@ export class NotificationService {
 
   async testConnection(): Promise<boolean> {
     try {
-      // 添加超时处理
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Connection timeout')), 10000);
-      });
+      if (this.useResend) {
+        // Resend 不需要验证连接
+        return true;
+      }
       
-      await Promise.race([this.transporter.verify(), timeoutPromise]);
-      logger.info('Email service connection verified');
+      if (this.transporter) {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Connection timeout')), 10000);
+        });
+        
+        await Promise.race([this.transporter.verify(), timeoutPromise]);
+        logger.info('Email service connection verified');
+      }
       return true;
     } catch (error) {
       logger.error('Email service connection failed:', error);
@@ -204,65 +220,77 @@ export class NotificationService {
   async sendTestEmail(): Promise<{ success: boolean; error?: string }> {
     try {
       logger.info('sendTestEmail called', {
-        user: config.email.user ? 'set' : 'not set',
-        recipients: config.email.recipients,
-        host: config.email.smtp.host
+        useResend: this.useResend,
+        recipients: config.email.recipients
       });
-      
-      // 添加发送超时
-      const sendWithTimeout = async () => {
+
+      const toEmail = config.email.recipients.length > 0 ? config.email.recipients[0] : 'test@example.com';
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #28a745;">✅ 邮件服务测试成功</h2>
+          
+          <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+            <h3 style="margin-top: 0; color: #155724;">系统状态正常</h3>
+            <p style="color: #155724; margin-bottom: 0;">
+              云端交易监控系统邮件服务已成功配置并可以正常发送通知。
+            </p>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <h4 style="margin-top: 0;">系统信息</h4>
+            <ul style="margin-bottom: 0;">
+              <li>发送时间: ${new Date().toLocaleString('zh-CN')}</li>
+              <li>服务状态: 运行中</li>
+              <li>监控币种: ${config.monitoring.symbols.slice(0, 5).join(', ')}...</li>
+              <li>监控间隔: ${config.monitoring.interval}秒</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #6c757d;">
+              如果您收到此邮件，说明交易提醒功能已准备就绪！
+            </p>
+          </div>
+        </div>
+      `;
+
+      // 使用 Resend
+      if (this.useResend && this.resend) {
+        const { data, error } = await this.resend.emails.send({
+          from: 'Trading Monitor <onboarding@resend.dev>',
+          to: [toEmail],
+          subject: '🧪 云端交易监控系统 - 测试邮件',
+          html: htmlContent
+        });
+
+        if (error) {
+          logger.error('Resend error:', error);
+          return { success: false, error: error.message };
+        }
+
+        logger.info('Test email sent via Resend', { id: data?.id });
+        return { success: true };
+      }
+
+      // 使用 SMTP
+      if (this.transporter) {
         const timeoutPromise = new Promise<never>((_, reject) => {
           setTimeout(() => reject(new Error('Send timeout after 15s')), 15000);
         });
-        
-        const testMailOptions = {
-        from: config.email.fromEmail || config.email.user,
-        to: config.email.recipients.length > 0 ? config.email.recipients[0] : 'test@example.com',
-        subject: '🧪 云端交易监控系统 - 测试邮件',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #28a745;">✅ 邮件服务测试成功</h2>
-            
-            <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
-              <h3 style="margin-top: 0; color: #155724;">系统状态正常</h3>
-              <p style="color: #155724; margin-bottom: 0;">
-                云端交易监控系统邮件服务已成功配置并可以正常发送通知。
-              </p>
-            </div>
 
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-              <h4 style="margin-top: 0;">系统信息</h4>
-              <ul style="margin-bottom: 0;">
-                <li>发送时间: ${new Date().toLocaleString('zh-CN')}</li>
-                <li>服务状态: 运行中</li>
-                <li>监控币种: BTCUSDT, ETHUSDT</li>
-                <li>监控间隔: 30秒</li>
-              </ul>
-            </div>
+        const sendPromise = this.transporter.sendMail({
+          from: config.email.fromEmail || config.email.user,
+          to: toEmail,
+          subject: '🧪 云端交易监控系统 - 测试邮件',
+          html: htmlContent
+        });
 
-            <div style="text-align: center; margin: 30px 0;">
-              <p style="color: #6c757d;">
-                如果您收到此邮件，说明交易提醒功能已准备就绪！
-              </p>
-            </div>
-          </div>
-        `
-      };
-
-        const sendPromise = this.transporter.sendMail(testMailOptions);
-        return Promise.race([sendPromise, timeoutPromise]);
-      };
-
-      const info = await sendWithTimeout();
-      logger.info('Test email sent successfully', { messageId: info.messageId });
-      
-      // 如果是Ethereal测试账户，记录预览URL
-      if (info.messageId && info.messageId.includes('ethereal')) {
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        logger.info(`Test email preview: ${previewUrl}`);
+        const info = await Promise.race([sendPromise, timeoutPromise]);
+        logger.info('Test email sent via SMTP', { messageId: info.messageId });
+        return { success: true };
       }
-      
-      return { success: true };
+
+      return { success: false, error: 'No email service configured' };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Failed to send test email:', errorMsg);
