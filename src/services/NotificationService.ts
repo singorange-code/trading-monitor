@@ -201,8 +201,14 @@ export class NotificationService {
     };
   }
 
-  async sendTestEmail(): Promise<boolean> {
+  async sendTestEmail(): Promise<{ success: boolean; error?: string }> {
     try {
+      logger.info('sendTestEmail called', {
+        user: config.email.user ? 'set' : 'not set',
+        recipients: config.email.recipients,
+        host: config.email.smtp.host
+      });
+      
       // 添加发送超时
       const sendWithTimeout = async () => {
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -256,10 +262,11 @@ export class NotificationService {
         logger.info(`Test email preview: ${previewUrl}`);
       }
       
-      return true;
+      return { success: true };
     } catch (error) {
-      logger.error('Failed to send test email:', error);
-      return false;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to send test email:', errorMsg);
+      return { success: false, error: errorMsg };
     }
   }
 

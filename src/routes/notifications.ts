@@ -9,9 +9,9 @@ const notificationService = new NotificationService();
 router.post('/test', async (_req, res) => {
   try {
     logger.info('Sending test email...');
-    const success = await notificationService.sendTestEmail();
+    const result = await notificationService.sendTestEmail();
     
-    if (success) {
+    if (result.success) {
       res.json({
         success: true,
         message: 'Test email sent successfully'
@@ -19,7 +19,8 @@ router.post('/test', async (_req, res) => {
     } else {
       res.status(500).json({
         success: false,
-        message: 'Failed to send test email'
+        message: 'Failed to send test email',
+        error: result.error
       });
     }
   } catch (error) {
