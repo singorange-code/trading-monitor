@@ -70,18 +70,38 @@ export class NotificationService {
   async sendAlert(alert: ClassifiedAlert): Promise<boolean> {
     try {
       const emailContent = this.generateEmailContent(alert);
-      const mailOptions = {
-        from: config.email.user,
-        to: config.email.recipients,
-        subject: this.generateSubject(alert),
-        html: emailContent
-      };
+      const subject = this.generateSubject(alert);
+      const toEmail = config.email.recipients.length > 0 ? config.email.recipients[0] : '';
 
-      if (this.transporter) {
-        await this.transporter.sendMail(mailOptions);
-        logger.info(`Alert sent for ${alert.opportunity.symbol} ${alert.level}`);
+      // 使用 Resend
+      if (this.useResend && this.resend && toEmail) {
+        const { error } = await this.resend.emails.send({
+          from: 'Trading Monitor <onboarding@resend.dev>',
+          to: [toEmail],
+          subject: subject,
+          html: emailContent
+        });
+
+        if (error) {
+          logger.error('Resend alert error:', error);
+          return false;
+        }
+        logger.info(`Alert sent via Resend for ${alert.opportunity.symbol} ${alert.level}`);
         return true;
       }
+
+      // 使用 SMTP
+      if (this.transporter) {
+        await this.transporter.sendMail({
+          from: config.email.user,
+          to: config.email.recipients,
+          subject: subject,
+          html: emailContent
+        });
+        logger.info(`Alert sent via SMTP for ${alert.opportunity.symbol} ${alert.level}`);
+        return true;
+      }
+      
       return false;
     } catch (error) {
       logger.error('Failed to send alert:', error);
@@ -105,14 +125,16 @@ export class NotificationService {
   }
   private generateEmailContent(alert: ClassifiedAlert): string {
     const { opportunity } = alert;
-    const snapshotUrl = `${config.server.baseUrl}/snapshots/${alert.opportunityId}`;
+    
+    // 生成 AI Prompt（可直接复制）
+    const aiPrompt = this.generateAIPrompt(alert);
     
     return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">交易机会提醒 - ${alert.level}</h2>
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+        <h2 style="color: #2c3e50;">🎯 交易机会提醒 - ${alert.level}</h2>
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0; color: #34495e;">${opportunity.symbol} - ${opportunity.strategy}</h3>
+          <h3 style="margin-top: 0; color: #34495e;">${opportunity.symbol} - ${opportunity.strategy} - ${opportunity.direction}</h3>
           
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
@@ -124,12 +146,20 @@ export class NotificationService {
               <td style="padding: 8px; border-bottom: 1px solid #ddd;">${opportunity.stopLoss}</td>
             </tr>
             <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>止盈价格:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${opportunity.takeProfit}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>止盈1:</strong></td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${opportunity.takeProfit1 || opportunity.takeProfit}</td>
             </tr>
             <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>风险收益比:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${opportunity.riskRewardRatio?.toFixed(2)}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>止盈2:</strong></td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${opportunity.takeProfit2 || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>净风险收益比:</strong></td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${opportunity.netRR}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>触发条件:</strong></td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${opportunity.trigger}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>距离入场:</strong></td>
@@ -138,19 +168,16 @@ export class NotificationService {
           </table>
         </div>
 
-        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
-          <h4 style="margin-top: 0; color: #856404;">风险提醒</h4>
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #856404;">⚠️ 风险提醒</h4>
           <p style="margin-bottom: 0; color: #856404;">
             请注意风险管理，严格按照止损止盈执行。市场有风险，投资需谨慎。
           </p>
         </div>
 
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${snapshotUrl}" 
-             style="background: #007bff; color: white; padding: 12px 24px; 
-                    text-decoration: none; border-radius: 6px; display: inline-block;">
-            查看详细数据快照
-          </a>
+        <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #0056b3;">🤖 AI Prompt（可直接复制给AI）</h4>
+          <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; font-size: 12px; line-height: 1.5;">${aiPrompt}</pre>
         </div>
 
         <div style="font-size: 12px; color: #6c757d; text-align: center; margin-top: 30px;">
@@ -159,6 +186,52 @@ export class NotificationService {
         </div>
       </div>
     `;
+  }
+
+  private generateAIPrompt(alert: ClassifiedAlert): string {
+    const { opportunity } = alert;
+    const stopDist = Math.abs(opportunity.entryPrice - opportunity.stopLoss);
+    const tp1 = opportunity.takeProfit1 || opportunity.takeProfit;
+    const tp2 = opportunity.takeProfit2 || 'N/A';
+    const netRRCheck = opportunity.netRR >= 1.5 ? '✓' : '✗';
+    
+    return `你是"合约执行官(风险优先)"。你只能使用我提供的【候选策略】做决策，禁止自行编造任何价格/指标。
+
+任务：
+1) 分析以下候选策略是否值得执行
+2) 若 netRR < 1.5，一律 WAIT
+3) 输出必须包含：选择结果 + 下单参数 + 风险检查清单
+
+【候选策略】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1] ${opportunity.strategy} ${opportunity.direction} [${opportunity.confidence}]
+    Symbol: ${opportunity.symbol}
+    Entry: ${opportunity.entryPrice}
+    SL: ${opportunity.stopLoss}
+    TP1: ${tp1}
+    TP2: ${tp2}
+    stopDist: ${stopDist.toFixed(2)}
+    netRR: ${opportunity.netRR}
+    触发条件: ${opportunity.trigger}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+输出格式（严格 JSON）：
+{
+  "action": "EXECUTE" | "WAIT",
+  "pick": "${opportunity.strategy}",
+  "orderType": "MARKET" | "LIMIT",
+  "direction": "${opportunity.direction}",
+  "entry": ${opportunity.entryPrice},
+  "sl": ${opportunity.stopLoss},
+  "tp1": ${tp1},
+  "tp2": ${tp2 === 'N/A' ? 'null' : tp2},
+  "reason": "一句话理由（必须引用触发条件）",
+  "checklist": [
+    "netRR>=1.5: ${netRRCheck}",
+    "方向与趋势一致",
+    "下单后立刻有保护性SL"
+  ]
+}`;
   }
 
   async addToQueue(alert: ClassifiedAlert): Promise<void> {
