@@ -27,18 +27,21 @@ export class NotificationService {
 
     // 否则使用SMTP配置
     if (config.email.user && config.email.password) {
-      logger.info('Using SMTP for email service');
+      logger.info('Using SMTP for email service', { host: config.email.smtp.host });
       return nodemailer.createTransport({
         host: config.email.smtp.host,
         port: config.email.smtp.port,
-        secure: config.email.smtp.port === 465, // true for 465, false for other ports
+        secure: config.email.smtp.port === 465,
         auth: {
           user: config.email.user,
           pass: config.email.password
         },
         tls: {
-          rejectUnauthorized: false // 允许自签名证书
-        }
+          rejectUnauthorized: false
+        },
+        connectionTimeout: 10000, // 10秒连接超时
+        greetingTimeout: 10000,
+        socketTimeout: 15000
       });
     }
 
@@ -177,7 +180,12 @@ export class NotificationService {
 
   async testConnection(): Promise<boolean> {
     try {
-      await this.transporter.verify();
+      // 添加超时处理
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Connection timeout')), 10000);
+      });
+      
+      await Promise.race([this.transporter.verify(), timeoutPromise]);
       logger.info('Email service connection verified');
       return true;
     } catch (error) {
@@ -195,7 +203,13 @@ export class NotificationService {
 
   async sendTestEmail(): Promise<boolean> {
     try {
-      const testMailOptions = {
+      // 添加发送超时
+      const sendWithTimeout = async () => {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Send timeout after 15s')), 15000);
+        });
+        
+        const testMailOptions = {
         from: config.email.fromEmail || config.email.user,
         to: config.email.recipients.length > 0 ? config.email.recipients[0] : 'test@example.com',
         subject: '🧪 云端交易监控系统 - 测试邮件',
@@ -229,7 +243,11 @@ export class NotificationService {
         `
       };
 
-      const info = await this.transporter.sendMail(testMailOptions);
+        const sendPromise = this.transporter.sendMail(testMailOptions);
+        return Promise.race([sendPromise, timeoutPromise]);
+      };
+
+      const info = await sendWithTimeout();
       logger.info('Test email sent successfully', { messageId: info.messageId });
       
       // 如果是Ethereal测试账户，记录预览URL
