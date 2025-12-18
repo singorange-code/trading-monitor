@@ -1,0 +1,61 @@
+{
+  "id": "1e943b7e-a219-45be-874d-9fa947ffd32a",
+  "timestamp": "2025-12-18T20:10:23.475Z",
+  "symbol": "ADAUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "ADAUSDT",
+    "timestamp": 1766088618669,
+    "price": 0.3496,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_SHORT_1766088620714",
+      "symbol": "ADAUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 0.3496,
+      "entryPrice": 0.3496,
+      "stopLoss": 0.351607,
+      "takeProfit1": 0.3435790000000001,
+      "takeProfit2": 0.3395650000000001,
+      "takeProfit": 0.3435790000000001,
+      "netRR": 2.81,
+      "riskRewardRatio": 2.81,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow SHORT, trend=DOWN",
+      "timestamp": 1766088618669
+    }
+  ],
+  "expiresAt": 1766175023475
+}

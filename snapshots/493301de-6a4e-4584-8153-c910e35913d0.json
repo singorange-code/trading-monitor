@@ -1,0 +1,61 @@
+{
+  "id": "493301de-6a4e-4584-8153-c910e35913d0",
+  "timestamp": "2025-12-18T20:10:21.796Z",
+  "symbol": "BNBUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "BNBUSDT",
+    "timestamp": 1766088618893,
+    "price": 824.7592500000001,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088620711",
+      "symbol": "BNBUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 824.7592500000001,
+      "entryPrice": 824.7592500000001,
+      "stopLoss": 826.6567500000001,
+      "takeProfit1": 820.0155,
+      "takeProfit2": 817.1692499999999,
+      "takeProfit": 820.0155,
+      "netRR": 2.11,
+      "riskRewardRatio": 2.11,
+      "distanceToEntry": 0.0007,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088618893
+    }
+  ],
+  "expiresAt": 1766175021796
+}

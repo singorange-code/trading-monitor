@@ -1,0 +1,61 @@
+{
+  "id": "6a655484-3976-4994-99da-09083e2cf6f9",
+  "timestamp": "2025-12-18T20:10:25.048Z",
+  "symbol": "DOTUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "DOTUSDT",
+    "timestamp": 1766088619789,
+    "price": 1.743745,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088620723",
+      "symbol": "DOTUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 1.743745,
+      "entryPrice": 1.743745,
+      "stopLoss": 1.752895,
+      "takeProfit1": 1.7208700000000001,
+      "takeProfit2": 1.7071450000000001,
+      "takeProfit": 1.7208700000000001,
+      "netRR": 2.33,
+      "riskRewardRatio": 2.33,
+      "distanceToEntry": 0.0016,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088619789
+    }
+  ],
+  "expiresAt": 1766175025048
+}

@@ -1,0 +1,61 @@
+{
+  "id": "8a0ee460-874d-4770-a7ff-4ab62949a4f9",
+  "timestamp": "2025-12-18T20:12:01.527Z",
+  "symbol": "ADAUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "ADAUSDT",
+    "timestamp": 1766088718794,
+    "price": 0.3506905,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088720680",
+      "symbol": "ADAUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 0.3506905,
+      "entryPrice": 0.3506905,
+      "stopLoss": 0.3523255,
+      "takeProfit1": 0.346603,
+      "takeProfit2": 0.3441505,
+      "takeProfit": 0.346603,
+      "netRR": 2.31,
+      "riskRewardRatio": 2.31,
+      "distanceToEntry": 0.0014,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088718794
+    }
+  ],
+  "expiresAt": 1766175121527
+}

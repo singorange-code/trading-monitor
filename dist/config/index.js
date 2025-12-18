@@ -52,7 +52,7 @@ exports.config = {
     // Monitoring Configuration
     monitoring: {
         interval: parseInt(process.env.MONITOR_INTERVAL_SECONDS || '30', 10),
-        symbols: (process.env.SYMBOLS || 'BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,ADAUSDT,DOGEUSDT,XRPUSDT,AVAXUSDT,DOTUSDT,MATICUSDT,LINKUSDT,LTCUSDT,UNIUSDT,ATOMUSDT,FILUSDT').split(','),
+        symbols: (process.env.SYMBOLS || 'BNBUSDT,BTCUSDT').split(','),
         strategies: ['BREAKOUT', 'PULLBACK', 'TREND_FOLLOW'],
         snapshotRetentionHours: 24,
         maxSnapshots: 100,

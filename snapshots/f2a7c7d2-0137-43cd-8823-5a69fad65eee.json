@@ -1,0 +1,61 @@
+{
+  "id": "f2a7c7d2-0137-43cd-8823-5a69fad65eee",
+  "timestamp": "2025-12-18T20:10:27.338Z",
+  "symbol": "ATOMUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "ATOMUSDT",
+    "timestamp": 1766088620704,
+    "price": 1.847,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_SHORT_1766088620732",
+      "symbol": "ATOMUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 1.847,
+      "entryPrice": 1.847,
+      "stopLoss": 1.85654,
+      "takeProfit1": 1.8183799999999997,
+      "takeProfit2": 1.7992999999999995,
+      "takeProfit": 1.8183799999999997,
+      "netRR": 2.79,
+      "riskRewardRatio": 2.79,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow SHORT, trend=DOWN",
+      "timestamp": 1766088620704
+    }
+  ],
+  "expiresAt": 1766175027338
+}

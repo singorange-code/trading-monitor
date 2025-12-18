@@ -1,0 +1,61 @@
+{
+  "id": "37e151bd-65d3-4719-904c-b39908c83a81",
+  "timestamp": "2025-12-18T20:06:53.041Z",
+  "symbol": "FILUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "FILUSDT",
+    "timestamp": 1766088404953,
+    "price": 1.17716,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088405037",
+      "symbol": "FILUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 1.17716,
+      "entryPrice": 1.17716,
+      "stopLoss": 1.18436,
+      "takeProfit1": 1.1591599999999997,
+      "takeProfit2": 1.1483599999999996,
+      "takeProfit": 1.1591599999999997,
+      "netRR": 2.35,
+      "riskRewardRatio": 2.35,
+      "distanceToEntry": 0.0018,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088404953
+    }
+  ],
+  "expiresAt": 1766174813041
+}

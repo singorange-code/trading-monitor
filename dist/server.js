@@ -262,16 +262,13 @@ class CloudTradingMonitor {
             if (!emailTest) {
                 logger_1.logger.warn('Email service test failed, notifications may not work');
             }
-            // 启动HTTP服务器
+            // 启动HTTP服务器 - 绑定到 0.0.0.0 以便 Render 检测端口
             await new Promise((resolve, reject) => {
-                this.server.listen(config_1.default.server.port, (err) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        logger_1.logger.info(`Server started on port ${config_1.default.server.port}`);
-                        resolve();
-                    }
+                this.server.listen(config_1.default.server.port, '0.0.0.0', () => {
+                    logger_1.logger.info(`Server started on 0.0.0.0:${config_1.default.server.port}`);
+                    resolve();
+                }).on('error', (err) => {
+                    reject(err);
                 });
             });
             // 启动监控

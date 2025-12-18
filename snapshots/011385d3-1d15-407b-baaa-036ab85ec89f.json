@@ -1,0 +1,61 @@
+{
+  "id": "011385d3-1d15-407b-baaa-036ab85ec89f",
+  "timestamp": "2025-12-18T20:06:45.899Z",
+  "symbol": "ETHUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "ETHUSDT",
+    "timestamp": 1766088402754,
+    "price": 2813.0404,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088405008",
+      "symbol": "ETHUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 2813.0404,
+      "entryPrice": 2813.0404,
+      "stopLoss": 2824.3084,
+      "takeProfit1": 2784.8704,
+      "takeProfit2": 2767.9683999999997,
+      "takeProfit": 2784.8704,
+      "netRR": 2.28,
+      "riskRewardRatio": 2.28,
+      "distanceToEntry": 0.0012,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088402754
+    }
+  ],
+  "expiresAt": 1766174805899
+}

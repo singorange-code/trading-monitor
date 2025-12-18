@@ -1,0 +1,61 @@
+{
+  "id": "ff66c19d-b9f9-4cdd-ba2a-79650c222022",
+  "timestamp": "2025-12-18T20:10:23.771Z",
+  "symbol": "DOGEUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "DOGEUSDT",
+    "timestamp": 1766088619678,
+    "price": 0.12113207499999999,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088620716",
+      "symbol": "DOGEUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 0.12113207499999999,
+      "entryPrice": 0.12113207499999999,
+      "stopLoss": 0.121572325,
+      "takeProfit1": 0.12003144999999998,
+      "takeProfit2": 0.11937107499999998,
+      "takeProfit": 0.12003144999999998,
+      "netRR": 2.25,
+      "riskRewardRatio": 2.25,
+      "distanceToEntry": 0.0011,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088619678
+    }
+  ],
+  "expiresAt": 1766175023771
+}

@@ -1,165 +1,189 @@
 import { MarketData, TradingOpportunity, KlineData } from '../types';
 import { logger } from '../utils/logger';
 
+/**
+ * OpportunityEngine - 同步自 App.jsx V12.6.6+ 的核心判断逻辑
+ * 
+ * 云端版本简化说明：
+ * - 只做信号检测和提醒，不做实际下单
+ * - 无法获取账户数据，所以不计算仓位大小
+ * - 无法获取 Taker Buy/Sell Ratio，跳过假突破过滤
+ * - netRR 门槛设为 1.5，与本地一致
+ */
 export class OpportunityEngine {
   private readonly minNetRR = 1.5;
 
-  // 交易成本配置
+  // 交易成本配置 (与 App.jsx 一致)
   private readonly TRADING_COSTS = {
     makerFee: 0.0002,
     takerFee: 0.0004,
     slippage: 0.0003,
-    getRoundTripCost(entryIsMarket = true, exitIsMarket = true, entrySlipOn = true, exitSlipOn = true) {
-      const entryFee = entryIsMarket ? this.takerFee : this.makerFee;
-      const exitFee = exitIsMarket ? this.takerFee : this.makerFee;
-      const entrySlip = (entryIsMarket && entrySlipOn) ? this.slippage : 0;
-      const exitSlip = (exitIsMarket && exitSlipOn) ? this.slippage : 0;
-      return entryFee + exitFee + entrySlip + exitSlip;
+    getMarketCost() {
+      return this.takerFee * 2 + this.slippage; // 市价双边 + 滑点
+    },
+    getLimitCost() {
+      return this.makerFee + this.takerFee + this.slippage * 0.5; // 限价入场
     }
   };
 
   async analyzeMarket(marketData: MarketData): Promise<TradingOpportunity[]> {
     try {
-      logger.info(`Analyzing market for ${marketData.symbol}`);
+      const { symbol, price, klines } = marketData;
       
-      // 执行全维分析
-      const analysis = this.performFullAnalysis(marketData);
-      
-      // 生成候选策略
-      const candidates = this.generateCandidateStrategies(analysis, marketData);
-      
-      // 过滤和排序
-      const validCandidates = candidates
-        .filter(c => c.netRR >= this.minNetRR)
-        .sort((a, b) => {
-          const confOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
-          const cd = (confOrder[b.confidence] || 0) - (confOrder[a.confidence] || 0);
-          if (cd !== 0) return cd;
-          return (b.netRR || 0) - (a.netRR || 0);
-        });
+      if (!price || !klines || klines.length < 50) {
+        logger.warn(`Insufficient data for ${symbol}: price=${price}, klines=${klines?.length || 0}`);
+        return [];
+      }
 
-      logger.info(`Generated ${candidates.length} candidates, ${validCandidates.length} valid (netRR >= ${this.minNetRR})`);
+      logger.info(`Analyzing ${symbol}: price=${price.toFixed(2)}, klines=${klines.length}`);
+
+      // 计算 ATR
+      const atr20 = this.calculateATR(klines, 20);
+      if (!atr20) {
+        logger.warn(`ATR calculation failed for ${symbol}`);
+        return [];
+      }
+
+      // 多周期分析 (模拟，云端只有15m数据，用不同窗口模拟)
+      const tf15m = this.tfSummary(klines, '15m');
       
-      return validCandidates;
+      // 计算基础止损距离
+      const baseStopDist = this.calcBaseStopDist(price, atr20);
+      if (!baseStopDist) {
+        logger.warn(`BaseStopDist calculation failed for ${symbol}`);
+        return [];
+      }
+
+      const candidates: TradingOpportunity[] = [];
+
+      // ========== BREAKOUT 策略 ==========
+      if (tf15m.valid && tf15m.signal?.startsWith('BREAKOUT_') && tf15m.volZ && tf15m.volZ > 1.5) {
+        const direction = tf15m.signal === 'BREAKOUT_UP' ? 'LONG' : 'SHORT';
+        const entry = price;
+        const stopDist = baseStopDist;
+        const stopLoss = direction === 'LONG' ? entry - stopDist : entry + stopDist;
+        const tp1 = direction === 'LONG' ? entry + stopDist * 2 : entry - stopDist * 2;
+        const tp2 = direction === 'LONG' ? entry + stopDist * 3 : entry - stopDist * 3;
+
+        const netRR = this.calculateNetRR(entry, stopLoss, tp1, 'MARKET');
+
+        if (netRR >= this.minNetRR) {
+          candidates.push({
+            id: `BREAKOUT_${direction}_${Date.now()}`,
+            symbol,
+            strategy: 'BREAKOUT',
+            direction,
+            alertLevel: 'WATCH',
+            entry,
+            entryPrice: entry,
+            stopLoss,
+            takeProfit1: tp1,
+            takeProfit2: tp2,
+            takeProfit: tp1,
+            netRR: +netRR.toFixed(2),
+            riskRewardRatio: +netRR.toFixed(2),
+            distanceToEntry: 0,
+            confidence: 'MEDIUM',
+            trigger: `15m ${tf15m.signal} volZ=${tf15m.volZ}`,
+            timestamp: marketData.timestamp
+          });
+          logger.info(`BREAKOUT candidate: ${symbol} ${direction} netRR=${netRR.toFixed(2)}`);
+        }
+      }
+
+      // ========== PULLBACK 策略 ==========
+      if (tf15m.valid && tf15m.signal?.startsWith('PULLBACK_')) {
+        const direction = tf15m.signal === 'PULLBACK_LONG' ? 'LONG' : 'SHORT';
+        const pullbackOffset = baseStopDist * 0.3;
+        const entry = direction === 'LONG' ? price - pullbackOffset : price + pullbackOffset;
+        const stopDist = baseStopDist;
+        const stopLoss = direction === 'LONG' ? entry - stopDist : entry + stopDist;
+        const tp1 = direction === 'LONG' ? entry + stopDist * 2.5 : entry - stopDist * 2.5;
+        const tp2 = direction === 'LONG' ? entry + stopDist * 4 : entry - stopDist * 4;
+
+        const netRR = this.calculateNetRR(entry, stopLoss, tp1, 'LIMIT');
+        const distanceToEntry = Math.abs(entry - price) / price;
+
+        if (netRR >= this.minNetRR) {
+          candidates.push({
+            id: `PULLBACK_${direction}_${Date.now()}`,
+            symbol,
+            strategy: 'PULLBACK',
+            direction,
+            alertLevel: 'WATCH',
+            entry,
+            entryPrice: entry,
+            stopLoss,
+            takeProfit1: tp1,
+            takeProfit2: tp2,
+            takeProfit: tp1,
+            netRR: +netRR.toFixed(2),
+            riskRewardRatio: +netRR.toFixed(2),
+            distanceToEntry: +distanceToEntry.toFixed(4),
+            confidence: 'HIGH',
+            trigger: `15m ${tf15m.signal} 回调入场`,
+            timestamp: marketData.timestamp
+          });
+          logger.info(`PULLBACK candidate: ${symbol} ${direction} netRR=${netRR.toFixed(2)}`);
+        }
+      }
+
+      // ========== TREND_FOLLOW 策略 ==========
+      if (tf15m.valid && tf15m.trend !== 'RANGE') {
+        const direction = tf15m.trend === 'UP' ? 'LONG' : 'SHORT';
+        const entry = price;
+        const widerStopDist = baseStopDist * 1.2;
+        const stopLoss = direction === 'LONG' ? entry - widerStopDist : entry + widerStopDist;
+        const tp1 = direction === 'LONG' ? entry + widerStopDist * 2 : entry - widerStopDist * 2;
+        const tp2 = direction === 'LONG' ? entry + widerStopDist * 3.5 : entry - widerStopDist * 3.5;
+
+        const netRR = this.calculateNetRR(entry, stopLoss, tp1, 'MARKET');
+
+        if (netRR >= this.minNetRR) {
+          candidates.push({
+            id: `TREND_FOLLOW_${direction}_${Date.now()}`,
+            symbol,
+            strategy: 'TREND_FOLLOW',
+            direction,
+            alertLevel: 'WATCH',
+            entry,
+            entryPrice: entry,
+            stopLoss,
+            takeProfit1: tp1,
+            takeProfit2: tp2,
+            takeProfit: tp1,
+            netRR: +netRR.toFixed(2),
+            riskRewardRatio: +netRR.toFixed(2),
+            distanceToEntry: 0,
+            confidence: 'MEDIUM',
+            trigger: `趋势跟随 ${direction} trend=${tf15m.trend}`,
+            timestamp: marketData.timestamp
+          });
+          logger.info(`TREND_FOLLOW candidate: ${symbol} ${direction} netRR=${netRR.toFixed(2)}`);
+        }
+      }
+
+      // 按置信度和 netRR 排序
+      candidates.sort((a, b) => {
+        const confOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+        const cd = (confOrder[b.confidence] || 0) - (confOrder[a.confidence] || 0);
+        if (cd !== 0) return cd;
+        return (b.netRR || 0) - (a.netRR || 0);
+      });
+
+      logger.info(`${symbol}: Generated ${candidates.length} valid candidates`);
+      return candidates;
+
     } catch (error) {
-      logger.error('Market analysis failed:', error);
+      logger.error(`Market analysis failed for ${marketData.symbol}:`, error);
       return [];
     }
   }
 
-  private performFullAnalysis(marketData: MarketData) {
-    const price = marketData.price;
-    const klines = marketData.klines;
-    
-    logger.info(`Performing analysis for ${marketData.symbol}: price=${price}, klines=${klines.length}`);
-    
-    // 计算技术指标
-    const atr20 = this.calculateATR(klines, 20);
-    const tfSummary = this.analyzeTechnicalFramework(klines);
-    
-    // 计算关键价位
-    const { hi: swingHigh, lo: swingLow } = this.getHiLo(klines, 50);
-    
-    // 计算振幅分位
-    const ampPct = this.calculateAmplitudePercentile(klines);
-    
-    // 市场状态
-    let regime = 'NORMAL';
-    if (ampPct != null) {
-      if (ampPct < 0.3) regime = 'LOW_VOL';
-      else if (ampPct > 0.75) regime = 'HIGH_VOL';
-    }
-
-    logger.info(`Analysis results for ${marketData.symbol}: atr20=${atr20}, trend=${tfSummary.trend}, signal=${tfSummary.signal}, volZ=${tfSummary.volZ}, regime=${regime}`);
-
-    return {
-      price,
-      atr20,
-      tfSummary,
-      swingHigh,
-      swingLow,
-      ampPct,
-      regime,
-      klines
-    };
-  }
-
-  private generateCandidateStrategies(analysis: any, marketData: MarketData): TradingOpportunity[] {
-    const candidates: TradingOpportunity[] = [];
-    const price = analysis.price;
-    
-    if (!price || !analysis.atr20) {
-      logger.warn(`Insufficient data for strategy generation: price=${price}, atr20=${analysis.atr20}`);
-      return candidates;
-    }
-
-    logger.info(`Evaluating strategies for ${marketData.symbol}: signal=${analysis.tfSummary.signal}, trend=${analysis.tfSummary.trend}, volZ=${analysis.tfSummary.volZ}`);
-
-    // 策略1: BREAKOUT - 基于高波动率突破
-    if (analysis.tfSummary.signal?.startsWith('BREAKOUT_') && analysis.tfSummary.volZ > 1.5) {
-      logger.info(`BREAKOUT signal detected: ${analysis.tfSummary.signal}, volZ=${analysis.tfSummary.volZ}`);
-      const direction = analysis.tfSummary.signal === 'BREAKOUT_UP' ? 'LONG' : 'SHORT';
-      const candidate = this.buildBreakoutStrategy(direction, price, analysis, marketData);
-      if (candidate) {
-        logger.info(`BREAKOUT candidate created: ${direction}, netRR=${candidate.netRR}`);
-        candidates.push(candidate);
-      }
-    }
-
-    // 策略2: PULLBACK - 基于趋势回调
-    if (analysis.tfSummary.signal?.startsWith('PULLBACK_')) {
-      logger.info(`PULLBACK signal detected: ${analysis.tfSummary.signal}`);
-      const direction = analysis.tfSummary.signal === 'PULLBACK_LONG' ? 'LONG' : 'SHORT';
-      const candidate = this.buildPullbackStrategy(direction, price, analysis, marketData);
-      if (candidate) {
-        logger.info(`PULLBACK candidate created: ${direction}, netRR=${candidate.netRR}`);
-        candidates.push(candidate);
-      }
-    }
-
-    // 策略3: TREND_FOLLOW - 基于趋势一致性
-    if (analysis.tfSummary.trend !== 'RANGE') {
-      logger.info(`TREND_FOLLOW signal detected: trend=${analysis.tfSummary.trend}`);
-      const direction = analysis.tfSummary.trend === 'UP' ? 'LONG' : 'SHORT';
-      const candidate = this.buildTrendFollowStrategy(direction, price, analysis, marketData);
-      if (candidate) {
-        logger.info(`TREND_FOLLOW candidate created: ${direction}, netRR=${candidate.netRR}`);
-        candidates.push(candidate);
-      }
-    }
-
-    logger.info(`Generated ${candidates.length} candidates for ${marketData.symbol}`);
-    return candidates;
-  }
-  // ==================== 技术指标计算 ====================
-  
-  private calculateATR(klines: KlineData[], period = 20): number | null {
-    if (!Array.isArray(klines) || klines.length < period + 2) return null;
-    
-    const trs: number[] = [];
-    for (let i = 1; i < klines.length; i++) {
-      const high = klines[i].high;
-      const low = klines[i].low;
-      const prevClose = klines[i - 1].close;
-      
-      if (high == null || low == null || prevClose == null) continue;
-      
-      const tr = Math.max(
-        high - low,
-        Math.abs(high - prevClose),
-        Math.abs(low - prevClose)
-      );
-      
-      if (this.isNum(tr)) trs.push(tr);
-    }
-    
-    if (trs.length < period) return null;
-    return trs.slice(-period).reduce((a, b) => a + b, 0) / period;
-  }
-
-  private analyzeTechnicalFramework(klines: KlineData[]) {
+  // ==================== 多周期分析 (同步自 App.jsx tfSummary) ====================
+  private tfSummary(klines: KlineData[], label: string) {
     if (!Array.isArray(klines) || klines.length < 50) {
-      return { valid: false, trend: 'RANGE', signal: 'CHOP' };
+      return { tf: label, valid: false, trend: 'RANGE', signal: 'CHOP' };
     }
 
     const closes = klines.map(k => k.close).filter(c => this.isNum(c));
@@ -167,13 +191,15 @@ export class OpportunityEngine {
     const lows = klines.map(k => k.low).filter(l => this.isNum(l));
     const volumes = klines.map(k => k.volume).filter(v => this.isNum(v));
 
-    if (closes.length < 50) return { valid: false, trend: 'RANGE', signal: 'CHOP' };
+    if (closes.length < 50) {
+      return { tf: label, valid: false, trend: 'RANGE', signal: 'CHOP' };
+    }
 
     const curClose = closes[closes.length - 1];
     const prevClose = closes[closes.length - 2];
     const ret1 = prevClose > 0 ? (curClose - prevClose) / prevClose : null;
 
-    // EMA计算
+    // EMA 计算
     const ema20 = this.calculateEMA(closes, 20);
     const ema50 = this.calculateEMA(closes, 50);
 
@@ -184,13 +210,15 @@ export class OpportunityEngine {
       else if (ema20 < ema50) trend = 'DOWN';
     }
 
-    // 价格位置
-    const rangeHi = Math.max(...highs.slice(-20));
-    const rangeLo = Math.min(...lows.slice(-20));
+    // 价格位置 (rangePos)
+    const recentHighs = highs.slice(-20);
+    const recentLows = lows.slice(-20);
+    const rangeHi = Math.max(...recentHighs);
+    const rangeLo = Math.min(...recentLows);
     const rangePos = rangeHi > rangeLo ? (curClose - rangeLo) / (rangeHi - rangeLo) : 0.5;
 
-    // 成交量Z分数
-    let volZ = 0;
+    // 成交量 Z 分数
+    let volZ: number | null = null;
     if (volumes.length >= 20) {
       const recentVols = volumes.slice(-20);
       const volMean = recentVols.reduce((a, b) => a + b, 0) / 20;
@@ -198,9 +226,9 @@ export class OpportunityEngine {
       volZ = volStd > 0 ? (volumes[volumes.length - 1] - volMean) / volStd : 0;
     }
 
-    // 信号生成
+    // 信号生成 (与 App.jsx 一致)
     let signal = 'CHOP';
-    if (volZ > 1.5 && ret1 != null) {
+    if (volZ !== null && volZ > 1.5 && ret1 !== null) {
       signal = ret1 > 0 ? 'BREAKOUT_UP' : 'BREAKOUT_DOWN';
     } else if (rangePos < 0.3 && trend === 'UP') {
       signal = 'PULLBACK_LONG';
@@ -209,230 +237,78 @@ export class OpportunityEngine {
     }
 
     return {
+      tf: label,
       valid: true,
       trend,
       signal,
       rangePos: +rangePos.toFixed(2),
-      volZ: +volZ.toFixed(2),
-      ret1: ret1 != null ? +(ret1 * 100).toFixed(2) : null,
-      ema20_vs_50: ema20 && ema50 ? (ema20 > ema50 ? 'ABOVE' : 'BELOW') : 'NA'
+      volZ: volZ !== null ? +volZ.toFixed(2) : null
     };
+  }
+
+  // ==================== 辅助计算函数 ====================
+
+  private calculateATR(klines: KlineData[], period = 20): number | null {
+    if (!Array.isArray(klines) || klines.length < period + 2) return null;
+
+    const trs: number[] = [];
+    for (let i = 1; i < klines.length; i++) {
+      const high = klines[i].high;
+      const low = klines[i].low;
+      const prevClose = klines[i - 1].close;
+
+      if (!this.isNum(high) || !this.isNum(low) || !this.isNum(prevClose)) continue;
+
+      const tr = Math.max(
+        high - low,
+        Math.abs(high - prevClose),
+        Math.abs(low - prevClose)
+      );
+
+      if (this.isNum(tr)) trs.push(tr);
+    }
+
+    if (trs.length < period) return null;
+    return trs.slice(-period).reduce((a, b) => a + b, 0) / period;
   }
 
   private calculateEMA(data: number[], period: number): number | null {
     if (data.length < period) return null;
-    
+
     const k = 2 / (period + 1);
     let ema = data.slice(0, period).reduce((a, b) => a + b, 0) / period;
-    
+
     for (let i = period; i < data.length; i++) {
       ema = data[i] * k + ema * (1 - k);
     }
-    
+
     return ema;
   }
 
-  private getHiLo(klines: KlineData[], period = 20): { hi: number | null; lo: number | null } {
-    if (!Array.isArray(klines) || klines.length < period) {
-      return { hi: null, lo: null };
-    }
-    
-    const recent = klines.slice(-period);
-    const highs = recent.map(k => k.high).filter(h => this.isNum(h));
-    const lows = recent.map(k => k.low).filter(l => this.isNum(l));
-    
-    if (!highs.length || !lows.length) return { hi: null, lo: null };
-    
-    return {
-      hi: Math.max(...highs),
-      lo: Math.min(...lows)
-    };
-  }
-
-  private calculateAmplitudePercentile(klines: KlineData[]): number | null {
-    if (!Array.isArray(klines) || klines.length < 20) return null;
-    
-    const amplitudes = klines
-      .map(k => {
-        const h = k.high, l = k.low, c = k.close;
-        if (h == null || l == null || c == null || c <= 0) return null;
-        return (h - l) / c;
-      })
-      .filter(amp => this.isNum(amp)) as number[];
-    
-    if (amplitudes.length === 0) return null;
-    
-    const curAmp = amplitudes[amplitudes.length - 1];
-    const sorted = [...amplitudes].sort((a, b) => a - b);
-    
-    return sorted.filter(v => v <= curAmp).length / sorted.length;
-  }
-
-  // ==================== 策略构建器 ====================
-  
-  private buildBreakoutStrategy(direction: 'LONG' | 'SHORT', price: number, analysis: any, marketData: MarketData): TradingOpportunity | null {
-    const baseStopDist = this.calculateBaseStopDist(price, analysis.atr20);
-    if (!baseStopDist) return null;
-
-    const entry = price;
-    const stopLoss = direction === 'LONG' ? 
-      entry - baseStopDist : 
-      entry + baseStopDist;
-    
-    const stopDist = Math.abs(entry - stopLoss);
-    const takeProfit1 = direction === 'LONG' ? 
-      entry + stopDist * 2.5 : 
-      entry - stopDist * 2.5;
-    const takeProfit2 = direction === 'LONG' ? 
-      entry + stopDist * 4 : 
-      entry - stopDist * 4;
-
-    const costPct = this.TRADING_COSTS.getRoundTripCost(true, true, false, true); // MARKET entry
-    const grossRR = Math.abs(takeProfit1 - entry) / stopDist;
-    const costR = (costPct * entry) / stopDist;
-    const netRR = grossRR - costR;
-
-    if (netRR < this.minNetRR) return null;
-
-    return {
-      id: `BREAKOUT_${direction}_${Date.now()}`,
-      symbol: marketData.symbol,
-      strategy: 'BREAKOUT',
-      direction,
-      alertLevel: 'WATCH',
-      entry,
-      entryPrice: entry,
-      stopLoss,
-      takeProfit1,
-      takeProfit2,
-      takeProfit: takeProfit1,
-      netRR: +netRR.toFixed(2),
-      riskRewardRatio: +netRR.toFixed(2),
-      distanceToEntry: 0, // MARKET order
-      confidence: 'MEDIUM',
-      trigger: `Breakout ${direction} signal, volZ=${analysis.tfSummary.volZ}`,
-      timestamp: marketData.timestamp
-    };
-  }
-
-  private buildPullbackStrategy(direction: 'LONG' | 'SHORT', price: number, analysis: any, marketData: MarketData): TradingOpportunity | null {
-    const baseStopDist = this.calculateBaseStopDist(price, analysis.atr20);
-    if (!baseStopDist) return null;
-
-    // 回调入场点
-    const pullbackOffset = baseStopDist * 0.3;
-    const entry = direction === 'LONG' ? 
-      price - pullbackOffset : 
-      price + pullbackOffset;
-
-    const stopLoss = direction === 'LONG' ? 
-      entry - baseStopDist : 
-      entry + baseStopDist;
-    
-    const stopDist = Math.abs(entry - stopLoss);
-    const takeProfit1 = direction === 'LONG' ? 
-      entry + stopDist * 2.5 : 
-      entry - stopDist * 2.5;
-    const takeProfit2 = direction === 'LONG' ? 
-      entry + stopDist * 4 : 
-      entry - stopDist * 4;
-
-    const costPct = this.TRADING_COSTS.getRoundTripCost(false, true, false, true); // LIMIT entry
-    const grossRR = Math.abs(takeProfit1 - entry) / stopDist;
-    const costR = (costPct * entry) / stopDist;
-    const netRR = grossRR - costR;
-
-    if (netRR < this.minNetRR) return null;
-
-    const distanceToEntry = Math.abs(entry - price) / price;
-
-    return {
-      id: `PULLBACK_${direction}_${Date.now()}`,
-      symbol: marketData.symbol,
-      strategy: 'PULLBACK',
-      direction,
-      alertLevel: 'WATCH',
-      entry,
-      entryPrice: entry,
-      stopLoss,
-      takeProfit1,
-      takeProfit2,
-      takeProfit: takeProfit1,
-      netRR: +netRR.toFixed(2),
-      riskRewardRatio: +netRR.toFixed(2),
-      distanceToEntry: +distanceToEntry.toFixed(4),
-      confidence: 'HIGH',
-      trigger: `Pullback ${direction} in ${analysis.tfSummary.trend} trend`,
-      timestamp: marketData.timestamp
-    };
-  }
-
-  private buildTrendFollowStrategy(direction: 'LONG' | 'SHORT', price: number, analysis: any, marketData: MarketData): TradingOpportunity | null {
-    const baseStopDist = this.calculateBaseStopDist(price, analysis.atr20);
-    if (!baseStopDist) {
-      logger.warn(`TREND_FOLLOW: baseStopDist calculation failed for ${marketData.symbol}`);
-      return null;
-    }
-
-    // 趋势跟随使用更宽的止损
-    const widerStopDist = baseStopDist * 1.2;
-    
-    const entry = price;
-    const stopLoss = direction === 'LONG' ? 
-      entry - widerStopDist : 
-      entry + widerStopDist;
-    
-    const stopDist = Math.abs(entry - stopLoss);
-    const takeProfit1 = direction === 'LONG' ? 
-      entry + stopDist * 3 : 
-      entry - stopDist * 3;
-    const takeProfit2 = direction === 'LONG' ? 
-      entry + stopDist * 5 : 
-      entry - stopDist * 5;
-
-    const costPct = this.TRADING_COSTS.getRoundTripCost(true, true, false, true); // MARKET entry
-    const grossRR = Math.abs(takeProfit1 - entry) / stopDist;
-    const costR = (costPct * entry) / stopDist;
-    const netRR = grossRR - costR;
-
-    logger.info(`TREND_FOLLOW calculation for ${marketData.symbol}: entry=${entry}, stopDist=${stopDist.toFixed(2)}, grossRR=${grossRR.toFixed(2)}, costR=${costR.toFixed(4)}, netRR=${netRR.toFixed(2)}, minNetRR=${this.minNetRR}`);
-
-    if (netRR < this.minNetRR) {
-      logger.warn(`TREND_FOLLOW: netRR ${netRR.toFixed(2)} < minNetRR ${this.minNetRR} for ${marketData.symbol}`);
-      return null;
-    }
-
-    return {
-      id: `TREND_FOLLOW_${direction}_${Date.now()}`,
-      symbol: marketData.symbol,
-      strategy: 'TREND_FOLLOW',
-      direction,
-      alertLevel: 'WATCH',
-      entry,
-      entryPrice: entry,
-      stopLoss,
-      takeProfit1,
-      takeProfit2,
-      takeProfit: takeProfit1,
-      netRR: +netRR.toFixed(2),
-      riskRewardRatio: +netRR.toFixed(2),
-      distanceToEntry: 0, // MARKET order
-      confidence: 'MEDIUM',
-      trigger: `Trend follow ${direction}, trend=${analysis.tfSummary.trend}`,
-      timestamp: marketData.timestamp
-    };
-  }
-
-  // ==================== 辅助函数 ====================
-  
-  private calculateBaseStopDist(price: number, atr: number | null): number | null {
+  // 基础止损距离 (同步自 App.jsx calcBaseStopDist)
+  private calcBaseStopDist(price: number, atr: number | null): number | null {
     if (!this.isNum(price) || !this.isNum(atr) || !atr) return null;
-    
+
     const atrStop = atr * 1.5;
     const minPctStop = price * 0.0012; // 0.12%
-    const minAbsStop = price * 0.001; // 最小绝对止损
-    
+    const minAbsStop = price * 0.001;  // 最小绝对止损
+
     return Math.max(atrStop, minPctStop, minAbsStop);
+  }
+
+  // 计算净风险收益比 (同步自 App.jsx)
+  private calculateNetRR(entry: number, stopLoss: number, tp1: number, orderType: 'MARKET' | 'LIMIT'): number {
+    const risk = Math.abs(entry - stopLoss);
+    const reward = Math.abs(tp1 - entry);
+
+    if (risk <= 0) return 0;
+
+    const costRate = orderType === 'MARKET' 
+      ? this.TRADING_COSTS.getMarketCost() 
+      : this.TRADING_COSTS.getLimitCost();
+    
+    const cost = costRate * entry;
+    return (reward - cost) / risk;
   }
 
   private isNum(value: any): value is number {

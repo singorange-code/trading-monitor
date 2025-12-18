@@ -1,0 +1,61 @@
+{
+  "id": "8d6f5d15-87a4-4fad-ac9e-8d3245eddd59",
+  "timestamp": "2025-12-18T20:06:45.053Z",
+  "symbol": "BTCUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "BTCUSDT",
+    "timestamp": 1766088402503,
+    "price": 85182.92675,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088405005",
+      "symbol": "BTCUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 85182.92675,
+      "entryPrice": 85182.92675,
+      "stopLoss": 85443.34925,
+      "takeProfit1": 84531.87049999999,
+      "takeProfit2": 84141.23675,
+      "takeProfit": 84531.87049999999,
+      "netRR": 2.21,
+      "riskRewardRatio": 2.21,
+      "distanceToEntry": 0.0009,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088402503
+    }
+  ],
+  "expiresAt": 1766174805053
+}

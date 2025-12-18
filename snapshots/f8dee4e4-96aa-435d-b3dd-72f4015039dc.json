@@ -1,0 +1,61 @@
+{
+  "id": "f8dee4e4-96aa-435d-b3dd-72f4015039dc",
+  "timestamp": "2025-12-18T20:06:53.305Z",
+  "symbol": "FILUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "FILUSDT",
+    "timestamp": 1766088404953,
+    "price": 1.175,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_SHORT_1766088405038",
+      "symbol": "FILUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 1.175,
+      "entryPrice": 1.175,
+      "stopLoss": 1.18364,
+      "takeProfit1": 1.14908,
+      "takeProfit2": 1.1318000000000001,
+      "takeProfit": 1.14908,
+      "netRR": 2.85,
+      "riskRewardRatio": 2.85,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow SHORT, trend=DOWN",
+      "timestamp": 1766088404953
+    }
+  ],
+  "expiresAt": 1766174813305
+}

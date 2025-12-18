@@ -191,47 +191,37 @@ export class NotificationService {
   private generateAIPrompt(alert: ClassifiedAlert): string {
     const { opportunity } = alert;
     const stopDist = Math.abs(opportunity.entryPrice - opportunity.stopLoss);
+    const stopPct = ((stopDist / opportunity.entryPrice) * 100).toFixed(2);
     const tp1 = opportunity.takeProfit1 || opportunity.takeProfit;
     const tp2 = opportunity.takeProfit2 || 'N/A';
-    const netRRCheck = opportunity.netRR >= 1.5 ? '✓' : '✗';
+    const tp1Pct = ((Math.abs(Number(tp1) - opportunity.entryPrice) / opportunity.entryPrice) * 100).toFixed(2);
     
-    return `你是"合约执行官(风险优先)"。你只能使用我提供的【候选策略】做决策，禁止自行编造任何价格/指标。
+    return `云端监控检测到交易信号，请打开全维数据确认后再决策。
 
-任务：
-1) 分析以下候选策略是否值得执行
-2) 若 netRR < 1.5，一律 WAIT
-3) 输出必须包含：选择结果 + 下单参数 + 风险检查清单
+═══ 信号摘要 ═══
+币种: ${opportunity.symbol}
+策略: ${opportunity.strategy}
+方向: ${opportunity.direction}
+置信度: ${opportunity.confidence}
 
-【候选策略】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[1] ${opportunity.strategy} ${opportunity.direction} [${opportunity.confidence}]
-    Symbol: ${opportunity.symbol}
-    Entry: ${opportunity.entryPrice}
-    SL: ${opportunity.stopLoss}
-    TP1: ${tp1}
-    TP2: ${tp2}
-    stopDist: ${stopDist.toFixed(2)}
-    netRR: ${opportunity.netRR}
-    触发条件: ${opportunity.trigger}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+═══ 价格参数 ═══
+Entry: ${opportunity.entryPrice}
+SL: ${opportunity.stopLoss} (-${stopPct}%)
+TP1: ${tp1} (+${tp1Pct}%)
+TP2: ${tp2}
+netRR: ${opportunity.netRR}
 
-输出格式（严格 JSON）：
-{
-  "action": "EXECUTE" | "WAIT",
-  "pick": "${opportunity.strategy}",
-  "orderType": "MARKET" | "LIMIT",
-  "direction": "${opportunity.direction}",
-  "entry": ${opportunity.entryPrice},
-  "sl": ${opportunity.stopLoss},
-  "tp1": ${tp1},
-  "tp2": ${tp2 === 'N/A' ? 'null' : tp2},
-  "reason": "一句话理由（必须引用触发条件）",
-  "checklist": [
-    "netRR>=1.5: ${netRRCheck}",
-    "方向与趋势一致",
-    "下单后立刻有保护性SL"
-  ]
-}`;
+═══ 触发条件 ═══
+${opportunity.trigger}
+
+═══ 下一步 ═══
+1. 打开本地全维数据面板
+2. 确认多周期趋势一致性
+3. 检查 Taker 买卖比、OI 变化等实时数据
+4. 确认账户状态和仓位大小
+5. 决策是否执行
+
+⚠️ 云端数据有限，仅作提醒，请以本地全维数据为准！`;
   }
 
   async addToQueue(alert: ClassifiedAlert): Promise<void> {

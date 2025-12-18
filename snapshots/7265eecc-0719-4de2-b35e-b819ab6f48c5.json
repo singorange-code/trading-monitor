@@ -1,0 +1,61 @@
+{
+  "id": "7265eecc-0719-4de2-b35e-b819ab6f48c5",
+  "timestamp": "2025-12-18T20:10:23.166Z",
+  "symbol": "SOLUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "SOLUSDT",
+    "timestamp": 1766088618666,
+    "price": 117.96,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "TREND_FOLLOW_SHORT_1766088620713",
+      "symbol": "SOLUSDT",
+      "strategy": "TREND_FOLLOW",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 117.96,
+      "entryPrice": 117.96,
+      "stopLoss": 118.5711,
+      "takeProfit1": 116.12669999999997,
+      "takeProfit2": 114.90449999999996,
+      "takeProfit": 116.12669999999997,
+      "netRR": 2.79,
+      "riskRewardRatio": 2.79,
+      "distanceToEntry": 0,
+      "confidence": "MEDIUM",
+      "trigger": "Trend follow SHORT, trend=DOWN",
+      "timestamp": 1766088618666
+    }
+  ],
+  "expiresAt": 1766175023166
+}

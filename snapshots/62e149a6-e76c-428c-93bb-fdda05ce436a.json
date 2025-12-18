@@ -1,0 +1,61 @@
+{
+  "id": "62e149a6-e76c-428c-93bb-fdda05ce436a",
+  "timestamp": "2025-12-18T20:06:50.902Z",
+  "symbol": "LINKUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "LINKUSDT",
+    "timestamp": 1766088404842,
+    "price": 11.883537500000001,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088405029",
+      "symbol": "LINKUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 11.883537500000001,
+      "entryPrice": 11.883537500000001,
+      "stopLoss": 11.938662500000001,
+      "takeProfit1": 11.745725,
+      "takeProfit2": 11.6630375,
+      "takeProfit": 11.745725,
+      "netRR": 2.31,
+      "riskRewardRatio": 2.31,
+      "distanceToEntry": 0.0014,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088404842
+    }
+  ],
+  "expiresAt": 1766174810902
+}

@@ -1,0 +1,61 @@
+{
+  "id": "3542ba58-68fc-4251-b587-d742de829dbc",
+  "timestamp": "2025-12-18T20:12:01.837Z",
+  "symbol": "UNIUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "UNIUSDT",
+    "timestamp": 1766088720668,
+    "price": 4.94365,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088720697",
+      "symbol": "UNIUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 4.94365,
+      "entryPrice": 4.94365,
+      "stopLoss": 4.96915,
+      "takeProfit1": 4.879899999999999,
+      "takeProfit2": 4.84165,
+      "takeProfit": 4.879899999999999,
+      "netRR": 2.33,
+      "riskRewardRatio": 2.33,
+      "distanceToEntry": 0.0015,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088720668
+    }
+  ],
+  "expiresAt": 1766175121837
+}

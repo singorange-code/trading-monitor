@@ -1,0 +1,61 @@
+{
+  "id": "4c65a478-d9a9-499d-a173-4ec97544923d",
+  "timestamp": "2025-12-18T20:12:30.621Z",
+  "symbol": "AVAXUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "AVAXUSDT",
+    "timestamp": 1766088749680,
+    "price": 11.4008475,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088750603",
+      "symbol": "AVAXUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 11.4008475,
+      "entryPrice": 11.4008475,
+      "stopLoss": 11.4436725,
+      "takeProfit1": 11.293784999999998,
+      "takeProfit2": 11.229547499999997,
+      "takeProfit": 11.293784999999998,
+      "netRR": 2.26,
+      "riskRewardRatio": 2.26,
+      "distanceToEntry": 0.0011,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088749680
+    }
+  ],
+  "expiresAt": 1766175150621
+}

@@ -1,0 +1,61 @@
+{
+  "id": "97febbdd-782b-4041-974d-119fdb78b0bc",
+  "timestamp": "2025-12-18T20:06:51.427Z",
+  "symbol": "LTCUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "LTCUSDT",
+    "timestamp": 1766088404962,
+    "price": 73.51910000000001,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088405032",
+      "symbol": "LTCUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 73.51910000000001,
+      "entryPrice": 73.51910000000001,
+      "stopLoss": 73.8161,
+      "takeProfit1": 72.77660000000002,
+      "takeProfit2": 72.33110000000002,
+      "takeProfit": 72.77660000000002,
+      "netRR": 2.28,
+      "riskRewardRatio": 2.28,
+      "distanceToEntry": 0.0012,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088404962
+    }
+  ],
+  "expiresAt": 1766174811427
+}

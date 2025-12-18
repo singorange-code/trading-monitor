@@ -1,0 +1,61 @@
+{
+  "id": "94ebd454-8ce3-4575-afe3-87b4204a576b",
+  "timestamp": "2025-12-18T20:11:00.939Z",
+  "symbol": "XRPUSDT",
+  "marketData": {},
+  "analysis": {
+    "symbol": "XRPUSDT",
+    "timestamp": 1766088659737,
+    "price": 1.81707775,
+    "indicators": {
+      "sma20": 0,
+      "sma50": 0,
+      "bollinger": {
+        "upper": 0,
+        "middle": 0,
+        "lower": 0
+      },
+      "rsi": 50,
+      "macd": {
+        "macd": 0,
+        "signal": 0,
+        "histogram": 0
+      },
+      "atr": 0.01
+    },
+    "strategies": [],
+    "riskMetrics": {
+      "volatility": 0,
+      "liquidity": 0,
+      "marketCap": 0,
+      "volume24h": 0
+    },
+    "marketCondition": {
+      "trend": "BULLISH",
+      "volatility": "MEDIUM",
+      "volume": "MEDIUM"
+    }
+  },
+  "opportunities": [
+    {
+      "id": "PULLBACK_SHORT_1766088660884",
+      "symbol": "XRPUSDT",
+      "strategy": "PULLBACK",
+      "direction": "SHORT",
+      "alertLevel": "WATCH",
+      "entry": 1.81707775,
+      "entryPrice": 1.81707775,
+      "stopLoss": 1.82367025,
+      "takeProfit1": 1.8005965,
+      "takeProfit2": 1.79070775,
+      "takeProfit": 1.8005965,
+      "netRR": 2.25,
+      "riskRewardRatio": 2.25,
+      "distanceToEntry": 0.0011,
+      "confidence": "HIGH",
+      "trigger": "Pullback SHORT in DOWN trend",
+      "timestamp": 1766088659737
+    }
+  ],
+  "expiresAt": 1766175060939
+}
