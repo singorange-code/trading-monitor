@@ -8,6 +8,10 @@ export interface MarketData {
   depth: DepthData;
   funding: number;
   openInterest: number;
+  takerBuySellRatio?: number;
+  flowDeltaNotional?: number;
+  tradeCount?: number;
+  flowTotalNotional?: number;
 }
 
 export interface KlineData {
@@ -29,7 +33,7 @@ export interface DepthData {
 export interface TradingOpportunity {
   id: string;
   symbol: string;
-  strategy: 'BREAKOUT' | 'PULLBACK' | 'TREND_FOLLOW';
+  strategy: 'BREAKOUT' | 'PULLBACK' | 'TREND_FOLLOW' | 'MEAN_REVERT';
   direction: 'LONG' | 'SHORT';
   alertLevel: 'WATCH' | 'READY' | 'FIRED';
   entry: number;

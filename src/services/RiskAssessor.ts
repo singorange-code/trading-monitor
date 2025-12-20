@@ -1,9 +1,10 @@
 import { logger } from '../utils/logger';
 import { TradingOpportunity, RiskAssessment } from '../types';
+import config from '../config';
 
 
 export class RiskAssessor {
-  private readonly minNetRR: number = 2.0;
+  private readonly minNetRR: number = config.risk.minNetRR;
   private readonly maxVolatilityThreshold: number = 0.05; // 5%
   private readonly minLiquidityThreshold: number = 1000000; // $1M
 

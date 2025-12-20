@@ -4,6 +4,13 @@ import config from '../config';
 import { logger, logError, logPerformance } from '../utils/logger';
 import { MarketData, KlineData, DepthData } from '../types';
 
+interface AggTradeData {
+  p: string;
+  q: string;
+  m: boolean;
+  T: number;
+}
+
 export class DataCollector {
   private client: AxiosInstance;
   private lastRequestTime = 0;
@@ -57,13 +64,17 @@ export class DataCollector {
     
     try {
       // Collect all required data in parallel with error handling
-      const [klines, depth, ticker, fundingRate, openInterest] = await Promise.allSettled([
+      const [klines, depth, ticker, fundingRate, openInterest, aggTrades] = await Promise.allSettled([
         this.getKlines(symbol),
         this.getDepth(symbol),
         this.getTicker(symbol),
         this.getFundingRate(symbol),
         this.getOpenInterest(symbol),
+        this.getAggTrades(symbol),
       ]);
+
+      const trades = this.extractValue(aggTrades, 'trades', []) as AggTradeData[];
+      const flowMetrics = this.calculateFlowMetrics(trades);
 
       // Process results and handle failures gracefully
       const marketData: MarketData = {
@@ -75,6 +86,10 @@ export class DataCollector {
         depth: this.extractValue(depth, 'depth', { bids: [], asks: [], timestamp: Date.now() }),
         funding: this.extractValue(fundingRate, 'funding', 0),
         openInterest: this.extractValue(openInterest, 'openInterest', 0),
+        takerBuySellRatio: flowMetrics.takerBuySellRatio,
+        flowDeltaNotional: flowMetrics.flowDeltaNotional,
+        tradeCount: flowMetrics.tradeCount,
+        flowTotalNotional: flowMetrics.flowTotalNotional,
       };
 
       const duration = Date.now() - startTime;
@@ -213,6 +228,19 @@ export class DataCollector {
     }
   }
 
+  private async getAggTrades(symbol: string, limit = 1000): Promise<{ trades: AggTradeData[] }> {
+    try {
+      const response = await this.client.get('/fapi/v1/aggTrades', {
+        params: { symbol, limit },
+        timeout: 5000,
+      });
+      return { trades: response.data as AggTradeData[] };
+    } catch (error) {
+      logError(`Failed to get aggTrades for ${symbol}`, error as Error);
+      return { trades: [] };
+    }
+  }
+
   // Health check method
   public async healthCheck(): Promise<{ status: string; latency: number }> {
     const startTime = Date.now();
@@ -289,6 +317,10 @@ export class DataCollector {
         depth: { bids: [], asks: [], timestamp: Date.now() },
         funding: 0,
         openInterest: 0,
+        takerBuySellRatio: 1,
+        flowDeltaNotional: 0,
+        tradeCount: 0,
+        flowTotalNotional: 0,
       };
     } catch (error) {
       throw error;
@@ -309,7 +341,45 @@ export class DataCollector {
       klines: [],
       depth: { bids: [], asks: [], timestamp: Date.now() },
       funding: 0.0001,
-      openInterest: Math.random() * 100000000
+      openInterest: Math.random() * 100000000,
+      takerBuySellRatio: 1,
+      flowDeltaNotional: 0,
+      tradeCount: 0,
+      flowTotalNotional: 0
+    };
+  }
+
+  private calculateFlowMetrics(trades: AggTradeData[]): {
+    takerBuySellRatio: number;
+    flowDeltaNotional: number;
+    tradeCount: number;
+    flowTotalNotional: number;
+  } {
+    let buyNotional = 0;
+    let sellNotional = 0;
+    let tradeCount = 0;
+
+    for (const t of trades) {
+      const qty = parseFloat(t.q || '0');
+      const price = parseFloat(t.p || '0');
+      const notional = qty * price;
+      tradeCount += 1;
+      if (t.m) {
+        sellNotional += notional;
+      } else {
+        buyNotional += notional;
+      }
+    }
+
+    const flowTotalNotional = buyNotional + sellNotional;
+    const flowDeltaNotional = flowTotalNotional > 0 ? (buyNotional - sellNotional) / flowTotalNotional : 0;
+    const takerBuySellRatio = sellNotional > 0 ? Math.min(buyNotional / sellNotional, 10) : (buyNotional > 0 ? 10 : 1);
+
+    return {
+      takerBuySellRatio,
+      flowDeltaNotional,
+      tradeCount,
+      flowTotalNotional,
     };
   }
 }

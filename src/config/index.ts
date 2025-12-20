@@ -46,7 +46,7 @@ export const config = {
   
   // Risk Management
   risk: {
-    minNetRR: parseFloat(process.env.MIN_NET_RR || '2.0'),
+    minNetRR: parseFloat(process.env.MIN_NET_RR || '1.2'),
     maxAlertsPerHour: parseInt(process.env.MAX_ALERTS_PER_HOUR || '3', 10),
     maxVolatility: 0.1, // 10% max volatility
     minLiquidity: 1000000, // $1M minimum liquidity
@@ -56,7 +56,7 @@ export const config = {
   monitoring: {
     interval: parseInt(process.env.MONITOR_INTERVAL_SECONDS || '30', 10),
     symbols: (process.env.SYMBOLS || 'BNBUSDT,BTCUSDT').split(','),
-    strategies: ['BREAKOUT', 'PULLBACK', 'TREND_FOLLOW'],
+    strategies: ['BREAKOUT', 'PULLBACK', 'TREND_FOLLOW', 'MEAN_REVERT'],
     snapshotRetentionHours: 24,
     maxSnapshots: 100,
   },

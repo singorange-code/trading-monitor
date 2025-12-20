@@ -11,7 +11,8 @@ import { logger } from '../utils/logger';
  * - netRR 门槛设为 1.5，与本地一致
  */
 export class OpportunityEngine {
-  private readonly minNetRR = 1.5;
+  private readonly rrGate = 1.5;
+  private readonly rrGateRelaxed = 1.2;
 
   // 交易成本配置 (与 App.jsx 一致)
   private readonly TRADING_COSTS = {
@@ -46,6 +47,17 @@ export class OpportunityEngine {
 
       // 多周期分析 (模拟，云端只有15m数据，用不同窗口模拟)
       const tf15m = this.tfSummary(klines, '15m');
+      const ampPct = this.calculateAmpPercentile(klines);
+      const regime = this.getRegime(ampPct);
+      const tfConsistency = this.estimateTfConsistency(tf15m);
+
+      const takerBuySellRatio = marketData.takerBuySellRatio ?? 1;
+      const flowDeltaNotional = marketData.flowDeltaNotional ?? 0;
+      const tradeCount = marketData.tradeCount ?? 0;
+      const flowTotalNotional = marketData.flowTotalNotional ?? 0;
+      const takerRatioReliable = tradeCount >= 50 && flowTotalNotional > 0;
+      const longFakeoutFloor = regime === 'HIGH_VOL' ? 0.9 : 0.85;
+      const shortFakeoutCeil = regime === 'HIGH_VOL' ? 1.1 : 1.15;
       
       // 计算基础止损距离
       const baseStopDist = this.calcBaseStopDist(price, atr20);
@@ -59,35 +71,52 @@ export class OpportunityEngine {
       // ========== BREAKOUT 策略 ==========
       if (tf15m.valid && tf15m.signal?.startsWith('BREAKOUT_') && tf15m.volZ && tf15m.volZ > 1.5) {
         const direction = tf15m.signal === 'BREAKOUT_UP' ? 'LONG' : 'SHORT';
-        const entry = price;
-        const stopDist = baseStopDist;
-        const stopLoss = direction === 'LONG' ? entry - stopDist : entry + stopDist;
-        const tp1 = direction === 'LONG' ? entry + stopDist * 2 : entry - stopDist * 2;
-        const tp2 = direction === 'LONG' ? entry + stopDist * 3 : entry - stopDist * 3;
+        let isFakeout = false;
+        if (takerRatioReliable && direction === 'LONG' && takerBuySellRatio < longFakeoutFloor && flowDeltaNotional < -0.05) {
+          isFakeout = true;
+        }
+        if (takerRatioReliable && direction === 'SHORT' && takerBuySellRatio > shortFakeoutCeil && flowDeltaNotional > 0.05) {
+          isFakeout = true;
+        }
 
-        const netRR = this.calculateNetRR(entry, stopLoss, tp1, 'MARKET');
+        if (!isFakeout) {
+          const entry = price;
+          const stopDist = baseStopDist;
+          const stopLoss = direction === 'LONG' ? entry - stopDist : entry + stopDist;
+          const tp1 = direction === 'LONG' ? entry + stopDist * 2 : entry - stopDist * 2;
+          const tp2 = direction === 'LONG' ? entry + stopDist * 3 : entry - stopDist * 3;
 
-        if (netRR >= this.minNetRR) {
-          candidates.push({
-            id: `BREAKOUT_${direction}_${Date.now()}`,
-            symbol,
-            strategy: 'BREAKOUT',
-            direction,
-            alertLevel: 'WATCH',
-            entry,
-            entryPrice: entry,
-            stopLoss,
-            takeProfit1: tp1,
-            takeProfit2: tp2,
-            takeProfit: tp1,
-            netRR: +netRR.toFixed(2),
-            riskRewardRatio: +netRR.toFixed(2),
-            distanceToEntry: 0,
-            confidence: 'MEDIUM',
-            trigger: `15m ${tf15m.signal} volZ=${tf15m.volZ}`,
-            timestamp: marketData.timestamp
-          });
-          logger.info(`BREAKOUT candidate: ${symbol} ${direction} netRR=${netRR.toFixed(2)}`);
+          const netRRRaw = this.calculateNetRR(entry, stopLoss, tp1, 'MARKET');
+          if (this.isNum(netRRRaw)) {
+            const netRR = +netRRRaw.toFixed(2);
+            const confidence =
+              ((tfConsistency > 0 && direction === 'LONG') || (tfConsistency < 0 && direction === 'SHORT'))
+                ? 'HIGH'
+                : 'MEDIUM';
+
+            candidates.push({
+              id: `BREAKOUT_${direction}_${Date.now()}`,
+              symbol,
+              strategy: 'BREAKOUT',
+              direction,
+              alertLevel: 'WATCH',
+              entry,
+              entryPrice: entry,
+              stopLoss,
+              takeProfit1: tp1,
+              takeProfit2: tp2,
+              takeProfit: tp1,
+              netRR,
+              riskRewardRatio: netRR,
+              distanceToEntry: 0,
+              confidence,
+              trigger: `15m ${tf15m.signal} volZ=${tf15m.volZ}`,
+              timestamp: marketData.timestamp
+            });
+            logger.info(`BREAKOUT candidate: ${symbol} ${direction} netRR=${netRR.toFixed(2)}`);
+          }
+        } else {
+          logger.info(`BREAKOUT filtered: ${symbol} ${direction} takerRatio=${takerBuySellRatio.toFixed(2)}`);
         }
       }
 
@@ -101,10 +130,11 @@ export class OpportunityEngine {
         const tp1 = direction === 'LONG' ? entry + stopDist * 2.5 : entry - stopDist * 2.5;
         const tp2 = direction === 'LONG' ? entry + stopDist * 4 : entry - stopDist * 4;
 
-        const netRR = this.calculateNetRR(entry, stopLoss, tp1, 'LIMIT');
+        const netRRRaw = this.calculateNetRR(entry, stopLoss, tp1, 'LIMIT');
         const distanceToEntry = Math.abs(entry - price) / price;
 
-        if (netRR >= this.minNetRR) {
+        if (this.isNum(netRRRaw)) {
+          const netRR = +netRRRaw.toFixed(2);
           candidates.push({
             id: `PULLBACK_${direction}_${Date.now()}`,
             symbol,
@@ -117,14 +147,55 @@ export class OpportunityEngine {
             takeProfit1: tp1,
             takeProfit2: tp2,
             takeProfit: tp1,
-            netRR: +netRR.toFixed(2),
-            riskRewardRatio: +netRR.toFixed(2),
+            netRR,
+            riskRewardRatio: netRR,
             distanceToEntry: +distanceToEntry.toFixed(4),
             confidence: 'HIGH',
             trigger: `15m ${tf15m.signal} 回调入场`,
             timestamp: marketData.timestamp
           });
           logger.info(`PULLBACK candidate: ${symbol} ${direction} netRR=${netRR.toFixed(2)}`);
+        }
+      }
+
+      // ========== MEAN_REVERT 策略 ==========
+      if (tf15m.valid && this.isNum(tf15m.rangePos) && Math.abs(tfConsistency) <= 4 && regime !== 'HIGH_VOL') {
+        let direction: 'LONG' | 'SHORT' | null = null;
+        if (tf15m.rangePos <= 0.2) direction = 'LONG';
+        if (tf15m.rangePos >= 0.8) direction = 'SHORT';
+        if (direction) {
+          const entry = price;
+          const stopDist = baseStopDist;
+          const tpMult = regime === 'LOW_VOL' ? 1.6 : 2.0;
+          const tp2Mult = regime === 'LOW_VOL' ? 2.6 : 3.0;
+          const stopLoss = direction === 'LONG' ? entry - stopDist : entry + stopDist;
+          const tp1 = direction === 'LONG' ? entry + stopDist * tpMult : entry - stopDist * tpMult;
+          const tp2 = direction === 'LONG' ? entry + stopDist * tp2Mult : entry - stopDist * tp2Mult;
+          const netRRRaw = this.calculateNetRR(entry, stopLoss, tp1, 'MARKET');
+          if (this.isNum(netRRRaw)) {
+            const netRR = +netRRRaw.toFixed(2);
+            const confidence = Math.abs(tfConsistency) <= 2 ? 'MEDIUM' : 'LOW';
+            candidates.push({
+              id: `MEAN_REVERT_${direction}_${Date.now()}`,
+              symbol,
+              strategy: 'MEAN_REVERT',
+              direction,
+              alertLevel: 'WATCH',
+              entry,
+              entryPrice: entry,
+              stopLoss,
+              takeProfit1: tp1,
+              takeProfit2: tp2,
+              takeProfit: tp1,
+              netRR,
+              riskRewardRatio: netRR,
+              distanceToEntry: 0,
+              confidence,
+              trigger: `15m rangePos=${tf15m.rangePos}`,
+              timestamp: marketData.timestamp
+            });
+            logger.info(`MEAN_REVERT candidate: ${symbol} ${direction} netRR=${netRR.toFixed(2)}`);
+          }
         }
       }
 
@@ -137,9 +208,11 @@ export class OpportunityEngine {
         const tp1 = direction === 'LONG' ? entry + widerStopDist * 2 : entry - widerStopDist * 2;
         const tp2 = direction === 'LONG' ? entry + widerStopDist * 3.5 : entry - widerStopDist * 3.5;
 
-        const netRR = this.calculateNetRR(entry, stopLoss, tp1, 'MARKET');
+        const netRRRaw = this.calculateNetRR(entry, stopLoss, tp1, 'MARKET');
 
-        if (netRR >= this.minNetRR) {
+        if (this.isNum(netRRRaw)) {
+          const netRR = +netRRRaw.toFixed(2);
+          const confidence = Math.abs(tfConsistency) >= 3 ? 'HIGH' : 'MEDIUM';
           candidates.push({
             id: `TREND_FOLLOW_${direction}_${Date.now()}`,
             symbol,
@@ -152,10 +225,10 @@ export class OpportunityEngine {
             takeProfit1: tp1,
             takeProfit2: tp2,
             takeProfit: tp1,
-            netRR: +netRR.toFixed(2),
-            riskRewardRatio: +netRR.toFixed(2),
+            netRR,
+            riskRewardRatio: netRR,
             distanceToEntry: 0,
-            confidence: 'MEDIUM',
+            confidence,
             trigger: `趋势跟随 ${direction} trend=${tf15m.trend}`,
             timestamp: marketData.timestamp
           });
@@ -163,16 +236,29 @@ export class OpportunityEngine {
         }
       }
 
-      // 按置信度和 netRR 排序
-      candidates.sort((a, b) => {
-        const confOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+      const confOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+      const tradables = candidates.filter((c) => this.isNum(c.netRR) && c.netRR >= this.rrGate);
+      let finalPicks = tradables;
+      let relaxed = false;
+
+      if (!finalPicks.length) {
+        finalPicks = candidates.filter(
+          (c) => this.isNum(c.netRR) && c.netRR >= this.rrGateRelaxed && c.confidence !== 'LOW'
+        );
+        relaxed = finalPicks.length > 0;
+      }
+
+      finalPicks.sort((a, b) => {
         const cd = (confOrder[b.confidence] || 0) - (confOrder[a.confidence] || 0);
         if (cd !== 0) return cd;
         return (b.netRR || 0) - (a.netRR || 0);
       });
 
-      logger.info(`${symbol}: Generated ${candidates.length} valid candidates`);
-      return candidates;
+      if (relaxed) {
+        logger.info(`${symbol}: Relaxed RR gate to ${this.rrGateRelaxed}`);
+      }
+      logger.info(`${symbol}: Generated ${finalPicks.length} tradables from ${candidates.length} candidates`);
+      return finalPicks;
 
     } catch (error) {
       logger.error(`Market analysis failed for ${marketData.symbol}:`, error);
@@ -315,5 +401,36 @@ export class OpportunityEngine {
     if (value === null || value === undefined || value === '') return false;
     const n = +value;
     return Number.isFinite(n);
+  }
+
+  private calculateAmpPercentile(klines: KlineData[]): number | null {
+    if (!Array.isArray(klines) || klines.length < 10) return null;
+    const amps: number[] = [];
+    for (const k of klines) {
+      const high = k?.high;
+      const low = k?.low;
+      const close = k?.close;
+      if (!this.isNum(high) || !this.isNum(low) || !this.isNum(close) || close <= 0) continue;
+      amps.push((high - low) / close);
+    }
+    if (!amps.length) return null;
+    const curAmp = amps[amps.length - 1];
+    const sorted = [...amps].sort((a, b) => a - b);
+    const rank = sorted.filter((v) => v <= curAmp).length;
+    return rank / sorted.length;
+  }
+
+  private getRegime(ampPct: number | null): 'LOW_VOL' | 'NORMAL' | 'HIGH_VOL' {
+    if (!this.isNum(ampPct)) return 'NORMAL';
+    if (ampPct < 0.3) return 'LOW_VOL';
+    if (ampPct > 0.75) return 'HIGH_VOL';
+    return 'NORMAL';
+  }
+
+  private estimateTfConsistency(tf15m: { valid: boolean; trend?: string }): number {
+    if (!tf15m?.valid) return 0;
+    if (tf15m.trend === 'UP') return 2;
+    if (tf15m.trend === 'DOWN') return -2;
+    return 0;
   }
 }
